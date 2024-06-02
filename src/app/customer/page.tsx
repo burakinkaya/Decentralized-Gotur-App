@@ -32,7 +32,7 @@ type Order = {
   issuetime: number;
   storeApproveTime: number;
   status?: string;
-  cancelStatus: number; // Varsayılan değeri olmayan bir number
+  cancelStatus: number;
 };
 
 export default function Customer() {
@@ -177,7 +177,7 @@ export default function Customer() {
         )}
         {account && isOrdersFetched && (
           <div className="w-full">
-            <p className="w-full text-2xl text-left mb-4 text-white font-semibold">Active Orders</p>
+            <p className="w-full text-2xl text-left mb-4 text-white font-semibold">My Orders</p>
             {orderData.map(
               (order) =>
                 order.customer === account && (

@@ -29,7 +29,7 @@ export default function ConnectWalletButton({ className, showIcon }: Props) {
   });
 
   return (
-    <Button className="bg-purple-900 hover:bg-purple-900/50 rounded-xl" onClick={() => open()}>
+    <Button className="bg-purple-900 hover:bg-purple-900/50 rounded-xl border border-white" onClick={() => open()}>
       {!account && showIcon && (
         <span className="hidden max-[768px]:inline-flex">
           <Wallet2 size={20} />

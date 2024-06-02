@@ -146,8 +146,8 @@ export default function Home() {
   };
 
   return (
-    <main className="bg-[#055c63] flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="mb-32 text-center lg:mb-0 lg:w-full items-center lg:max-w-5xl flex flex-col gap-20">
+    <main className="bg-[#055c63] flex min-h-screen flex-col items-center justify-between p-12">
+      <div className="mb-16 text-center lg:mb-0 lg:w-full items-center lg:max-w-5xl flex flex-col gap-8">
         <h1 className="w-full text-2xl md:text-4xl">Welcome to Götür, a Decentralized Delivery System</h1>
         {!account && (
           <div className="flex flex-col gap-10">
@@ -155,8 +155,49 @@ export default function Home() {
             <ConnectWalletButton />
           </div>
         )}
+        {account && (
+          <div className="flex flex-col gap-10 w-full items-center justify-center border-b border-white/70 pb-6">
+            <div className="flex flex-col gap-2">
+              <p>
+                Remember, you need to deposit at least 1000 Food Tokens (FTK) to be a courier, store or buy products as
+                customer!
+              </p>
+              <p>Ignore this if you already did 🤠</p>
+            </div>
+            <div className="flex flex-row gap-4">
+              <input
+                type="number"
+                value={depositTokens}
+                onChange={handleDepositChange}
+                className="text-white rounded-xl p-1 text-center bg-purple-900/50"
+              ></input>
+              <button
+                className="w-fit border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
+                onClick={() => handleDepositTokens()}
+              >
+                Deposit Food Tokens
+              </button>
+            </div>
+
+            <div className="flex flex-row gap-4">
+              <input
+                type="number"
+                value={withdrawTokens}
+                onChange={handleWithdrawChange}
+                className="text-white rounded-xl p-1 text-center bg-purple-900/50"
+              ></input>
+              <button
+                className="w-fit border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
+                onClick={() => handleWithdrawTokens()}
+              >
+                Withdraw Food Tokens
+              </button>
+            </div>
+          </div>
+        )}
+
         {account && userType === "none" && (
-          <div className="flex flex-col gap-10">
+          <div className="flex flex-col gap-4">
             <p className="text-xl md:text-2xl text-left">I'm a:</p>
             <div className="flex gap-4 w-full">
               <button
@@ -188,44 +229,12 @@ export default function Home() {
         )}
 
         {account && userType !== "none" && (
-          <div className="flex flex-col gap-10 w-full items-center justify-center">
-            <div className="flex flex-row gap-4">
-              <input
-                type="number"
-                value={depositTokens}
-                onChange={handleDepositChange}
-                className="text-white rounded-xl p-1 text-center bg-purple-900/50"
-              ></input>
-              <button
-                className="w-fit border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
-                onClick={() => handleDepositTokens()}
-              >
-                Deposit Food Tokens
-              </button>
-            </div>
-
-            <div className="flex flex-row gap-4">
-              <input
-                type="number"
-                value={withdrawTokens}
-                onChange={handleWithdrawChange}
-                className="text-white rounded-xl p-1 text-center bg-purple-900/50"
-              ></input>
-              <button
-                className="w-fit border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
-                onClick={() => handleWithdrawTokens()}
-              >
-                Withdraw Food Tokens
-              </button>
-            </div>
-
-            <button
-              className="w-1/3 border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
-              onClick={() => (window.location.href = `/${userType}`)}
-            >
-              Go to Dashboard
-            </button>
-          </div>
+          <button
+            className="w-1/3 border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
+            onClick={() => (window.location.href = `/${userType}`)}
+          >
+            Go to Dashboard
+          </button>
         )}
       </div>
     </main>
