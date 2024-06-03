@@ -109,14 +109,18 @@ export default function Store() {
             status = "Waiting for you to Approve order";
             iterationStatus = "Approve Order";
           } else if (!order.courierFound) {
-            status = "Waiting for Courier to Find your Order.";
+            status = "Waiting for Courier to Find the Order.";
             if (currentTime - orderIssueTime > thirtySecondsInMilliseconds) {
               status += " Since over 30 minutes have passed, Customer may cancel the order";
             }
           } else if (!order.courierPickedUp) {
-            status = "Waiting for Courier to Pick Up the Order";
-          } else {
+            status = "A Courier is found, waiting for Courier to Pick Up the Order";
+          } else if (!order.isDeliveredByCourier) {
             status = "Courier is on his/her way to the Customer";
+          } else if (!order.isReceivedByCustomer) {
+            status = "Order is delivered to the Customer";
+          } else {
+            status = "Orde is completed";
           }
 
           return {

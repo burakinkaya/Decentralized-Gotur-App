@@ -33,6 +33,7 @@ type Order = {
   storeApproveTime: number;
   status?: string;
   cancelStatus: number;
+  receiveButton: boolean;
 };
 
 export default function Customer() {
@@ -101,6 +102,23 @@ export default function Customer() {
     }
   };
 
+  const handleConfirmDelivery = async (orderId: bigint) => {
+    try {
+      const result = await writeContractAsync({
+        abi: GoturAbi,
+        address: GOTUR_CONTRACT_ADDRESS as `0x${string}`,
+        functionName: "markOrderReceived",
+        args: [orderId],
+        account,
+        chainId: CHAIN_ID,
+      });
+
+      console.log(result);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     if (isOrdersFetched) {
       if (ordersData) {
@@ -111,6 +129,7 @@ export default function Customer() {
 
           let status = "";
           let cancelStatus = 0;
+          let receiveButton = false;
 
           if (!order.storeApproved) {
             status = "Waiting for Store to Approve your Order";
@@ -118,13 +137,18 @@ export default function Customer() {
           } else if (!order.courierFound) {
             status = "Waiting for Courier to Find your Order.";
             if (currentTime - orderIssueTime > thirtySecondsInMilliseconds) {
-              status += " rder is approved but over 30 minutes have passed";
+              status += " Order is approved but over 30 minutes have passed";
               cancelStatus = 2;
             }
           } else if (!order.courierPickedUp) {
-            status = "Waiting for Courier to Pick Up your Order";
+            status = "A Courier is found, waiting for Courier to Pick Up your Order";
           } else {
-            status = "Courier is on his/her way to your location";
+            if (order.isDeliveredByCourier) {
+              status = "Courier has delivered your Order, waiting for your confirmation";
+              receiveButton = true;
+            } else {
+              status = "Courier is on his/her way to your location";
+            }
           }
 
           return {
@@ -138,10 +162,12 @@ export default function Customer() {
             storeApproveTime: Number(order.storeApproveTime),
             status,
             cancelStatus,
+            receiveButton,
           };
         });
 
         setOrderData(mutableOrdersData);
+        console.log("mutableOrdersData", mutableOrdersData);
       } else {
         console.log("There is no order returned from contract.");
       }
@@ -210,6 +236,14 @@ export default function Customer() {
                         className="w-fit justify-center self-center border mt-2 border-white/70 rounded-xl p-3 bg-red-900 hover:bg-red-900/50"
                       >
                         Cancel Order
+                      </button>
+                    )}
+                    {order.receiveButton && (
+                      <button
+                        onClick={() => handleConfirmDelivery(BigInt(order.orderId))}
+                        className="mt-2 w-fit self-center px-10 border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
+                      >
+                        Confirm Delivery
                       </button>
                     )}
                   </div>

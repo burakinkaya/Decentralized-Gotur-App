@@ -114,11 +114,13 @@ export default function Home() {
 
       console.log("Approve Result:", approveResult);
 
+      await new Promise((resolve) => setTimeout(resolve, 10000));
+
       const depositResult = await writeContractAsync({
         abi: GoturAbi,
         address: GOTUR_CONTRACT_ADDRESS as `0x${string}`,
         functionName: "deposit",
-        args: [BigInt(depositTokens * 1e18)],
+        args: [BigInt(depositTokens)],
         account,
         chainId: CHAIN_ID,
       });
@@ -128,13 +130,14 @@ export default function Home() {
       console.log(error);
     }
   };
+
   const handleWithdrawTokens = async () => {
     try {
       const withdrawalResult = await writeContractAsync({
         abi: GoturAbi,
         address: GOTUR_CONTRACT_ADDRESS as `0x${string}`,
         functionName: "withdraw",
-        args: [BigInt(withdrawTokens * 1e18)],
+        args: [BigInt(withdrawTokens)],
         account,
         chainId: CHAIN_ID,
       });
@@ -147,7 +150,7 @@ export default function Home() {
 
   return (
     <main className="bg-[#8f7efc] flex min-h-screen flex-col items-center justify-between p-12">
-      <div className="mb-16 text-center lg:mb-0 lg:w-full items-center lg:max-w-5xl flex flex-col gap-8">
+      <div className="mb-16 text-center lg:mb-0 lg:w-full items-center lg:max-w-5xl flex flex-col gap-6">
         <h1 className="w-full text-2xl md:text-4xl">Welcome to Gotur, a Decentralized Delivery System</h1>
         {!account && (
           <div className="flex flex-col gap-10">
@@ -156,7 +159,7 @@ export default function Home() {
           </div>
         )}
         {account && (
-          <div className="flex flex-col gap-10 w-full items-center justify-center border-b border-white/70 pb-6">
+          <div className="flex flex-col gap-8 w-full items-center justify-center border-b border-white/70 pb-6">
             <div className="flex flex-col gap-2">
               <p>
                 Remember, you need to deposit at least 1000 Food Tokens (FTK) to be a courier, store or buy products as
@@ -204,7 +207,7 @@ export default function Home() {
                 className="w-1/3 border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
                 onClick={() => handleButtonClick("makeCustomer")}
               >
-                User
+                Customer
               </button>
               <button
                 className="w-1/3 border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
