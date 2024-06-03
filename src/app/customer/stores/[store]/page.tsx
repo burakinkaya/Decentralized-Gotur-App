@@ -137,7 +137,7 @@ export default function Store() {
   };
 
   return (
-    <main className="bg-[#055c63] flex min-h-screen flex-col items-center justify-between p-12">
+    <main className="bg-[#8f7efc] flex min-h-screen flex-col items-center justify-between p-12">
       <div className="text-center lg:w-full items-center lg:max-w-5xl flex flex-col gap-20">
         <h1 className="w-full text-2xl md:text-4xl text-left">Store Products</h1>
         {account && isFetched && (

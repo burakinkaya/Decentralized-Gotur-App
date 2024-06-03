@@ -402,6 +402,111 @@ const GoturAbi = [
   },
   {
     inputs: [],
+    name: "getServeableOrders",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "orderId",
+            type: "uint256",
+          },
+          {
+            internalType: "address",
+            name: "customer",
+            type: "address",
+          },
+          {
+            internalType: "address",
+            name: "store",
+            type: "address",
+          },
+          {
+            internalType: "address",
+            name: "courier",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "totalPrice",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "courierFee",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256[]",
+            name: "itemIds",
+            type: "uint256[]",
+          },
+          {
+            internalType: "uint256[]",
+            name: "quantitities",
+            type: "uint256[]",
+          },
+          {
+            internalType: "bool",
+            name: "courierFound",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "storeApproved",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "courierPickedUp",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "isDeliveredByCourier",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "isReceivedByCustomer",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "isCanceled",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "isComplete",
+            type: "bool",
+          },
+          {
+            internalType: "string",
+            name: "mapAddress",
+            type: "string",
+          },
+          {
+            internalType: "uint256",
+            name: "issuetime",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "storeApproveTime",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct Gotur.Order[]",
+        name: "",
+        type: "tuple[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "getStores",
     outputs: [
       {

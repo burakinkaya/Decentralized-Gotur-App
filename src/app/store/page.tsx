@@ -36,7 +36,7 @@ type Order = {
   issuetime: number;
   storeApproveTime: number;
   status?: string;
-  cancelStatus: number;
+  iterationStatus: string;
 };
 
 export default function Store() {
@@ -103,17 +103,20 @@ export default function Store() {
           const orderIssueTime = Number(order.issuetime) * 1000;
 
           let status = "";
+          let iterationStatus = "";
 
           if (!order.storeApproved) {
             status = "Waiting for you to Approve order";
-          } else if (currentTime - orderIssueTime > thirtySecondsInMilliseconds) {
-            status = "You approved the order but over 30 minutes have passed, Customer may cancel the order";
+            iterationStatus = "Approve Order";
           } else if (!order.courierFound) {
-            status = "Waiting for Courier to Find the Order";
+            status = "Waiting for Courier to Find your Order.";
+            if (currentTime - orderIssueTime > thirtySecondsInMilliseconds) {
+              status += " Since over 30 minutes have passed, Customer may cancel the order";
+            }
           } else if (!order.courierPickedUp) {
             status = "Waiting for Courier to Pick Up the Order";
           } else {
-            status = "Courier is on the way to Customer";
+            status = "Courier is on his/her way to the Customer";
           }
 
           return {
@@ -126,6 +129,7 @@ export default function Store() {
             issuetime: Number(order.issuetime),
             storeApproveTime: Number(order.storeApproveTime),
             status,
+            iterationStatus,
           };
         });
 
@@ -191,8 +195,24 @@ export default function Store() {
     setToggleButtonText(toggleButtonText === "Add Item" ? "Cancel" : "Add Item");
   };
 
+  const handleApproveOrder = async (orderId: bigint) => {
+    try {
+      const result = writeContractAsync({
+        abi: GoturAbi,
+        address: GOTUR_CONTRACT_ADDRESS as `0x${string}`,
+        functionName: "approveOrder",
+        args: [orderId],
+        account,
+        chainId: CHAIN_ID,
+      });
+      console.log(result);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
-    <main className="bg-[#055c63] flex min-h-screen flex-col  justify-between p-12">
+    <main className="bg-[#8f7efc] flex min-h-screen flex-col  justify-between p-12">
       {account && (
         <div className="mb-32  lg:mb-0  flex flex-col gap-10 ">
           <div className="flex flex-row justify-between items-center">
@@ -266,23 +286,36 @@ export default function Store() {
                             order.store === account && (
                               <div
                                 key={order.orderId}
-                                className="flex flex-col border border-white p-4 rounded-xl gap-2 w-full mb-4"
+                                className="flex flex-col border border-white p-4 rounded-xl gap-4 w-full mb-4"
                               >
-                                <p>Order ID: {order.orderId}</p>
-                                <p>Customer Name: {formatAddress(order.customer)}</p>
-                                {order.courier !== "0x0000000000000000000000000000000000000000" && order.courier && (
-                                  <p>Courier: {formatAddress(order.courier)}</p>
+                                <div className="flex flex-col gap-2">
+                                  <p>Order ID: {order.orderId}</p>
+                                  <p>Customer Name: {formatAddress(order.customer)}</p>
+                                  {order.courier !== "0x0000000000000000000000000000000000000000" && order.courier && (
+                                    <p>Courier: {formatAddress(order.courier)}</p>
+                                  )}
+                                  <p>Total Price: {order.totalPrice.toString()}</p>
+                                  <p>Courier Fee: {order.courierFee.toString()}</p>
+                                  <p>Items: {order.itemIds.join(", ")}</p>
+                                  <p>Quantities: {order.quantities.join(", ")}</p>
+                                  <p>Map Address: {order.mapAddress}</p>
+                                  <p>Issue Time: {new Date(order.issuetime * 1000).toLocaleString()}</p>
+                                  {order.storeApproveTime !== 0 && (
+                                    <p>
+                                      Store Approve Time: {new Date(order.storeApproveTime * 1000).toLocaleString()}
+                                    </p>
+                                  )}
+                                  <p>Order Status: {order.status}</p>
+                                </div>
+
+                                {order.iterationStatus === "Approve Order" && (
+                                  <button
+                                    className="w-fit px-10 border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
+                                    onClick={() => handleApproveOrder(BigInt(order.orderId))}
+                                  >
+                                    {order.iterationStatus}
+                                  </button>
                                 )}
-                                <p>Total Price: {order.totalPrice.toString()}</p>
-                                <p>Courier Fee: {order.courierFee.toString()}</p>
-                                <p>Items: {order.itemIds.join(", ")}</p>
-                                <p>Quantities: {order.quantities.join(", ")}</p>
-                                <p>Map Address: {order.mapAddress}</p>
-                                <p>Issue Time: {new Date(order.issuetime * 1000).toLocaleString()}</p>
-                                {order.storeApproveTime !== 0 && (
-                                  <p>Store Approve Time: {new Date(order.storeApproveTime * 1000).toLocaleString()}</p>
-                                )}
-                                <p>Order Status: {order.status}</p>
                               </div>
                             )
                         )}

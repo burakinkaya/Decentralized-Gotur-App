@@ -146,9 +146,9 @@ export default function Home() {
   };
 
   return (
-    <main className="bg-[#055c63] flex min-h-screen flex-col items-center justify-between p-12">
+    <main className="bg-[#8f7efc] flex min-h-screen flex-col items-center justify-between p-12">
       <div className="mb-16 text-center lg:mb-0 lg:w-full items-center lg:max-w-5xl flex flex-col gap-8">
-        <h1 className="w-full text-2xl md:text-4xl">Welcome to Götür, a Decentralized Delivery System</h1>
+        <h1 className="w-full text-2xl md:text-4xl">Welcome to Gotur, a Decentralized Delivery System</h1>
         {!account && (
           <div className="flex flex-col gap-10">
             <p className="text-xl md:text-2xl text-left">Connect your wallet first</p>

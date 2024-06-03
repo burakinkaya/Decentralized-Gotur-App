@@ -115,15 +115,16 @@ export default function Customer() {
           if (!order.storeApproved) {
             status = "Waiting for Store to Approve your Order";
             cancelStatus = 1;
-          } else if (currentTime - orderIssueTime > thirtySecondsInMilliseconds) {
-            status = "Order approved but over 30 minutes have passed";
-            cancelStatus = 2;
           } else if (!order.courierFound) {
-            status = "Waiting for Courier to Find your Order";
+            status = "Waiting for Courier to Find your Order.";
+            if (currentTime - orderIssueTime > thirtySecondsInMilliseconds) {
+              status += " rder is approved but over 30 minutes have passed";
+              cancelStatus = 2;
+            }
           } else if (!order.courierPickedUp) {
             status = "Waiting for Courier to Pick Up your Order";
           } else {
-            status = "Courier is on the way to your location";
+            status = "Courier is on his/her way to your location";
           }
 
           return {
@@ -152,7 +153,7 @@ export default function Customer() {
   }, [isOrdersFetched, ordersData, isOrdersError, account]);
 
   return (
-    <main className="bg-[#055c63] flex min-h-screen flex-col items-center justify-between p-12">
+    <main className="bg-[#8f7efc] flex min-h-screen flex-col items-center justify-between p-12">
       <div className="text-center lg:w-full items-center lg:max-w-5xl flex flex-col gap-10">
         <h1 className="w-full text-2xl md:text-4xl text-left">Customer Dashboard</h1>
         {account && isStoresFetched && (
@@ -200,14 +201,17 @@ export default function Customer() {
                       <p>Store Approve Time: {new Date(order.storeApproveTime * 1000).toLocaleString()}</p>
                     )}
                     <p>Order Status: {order.status}</p>
-                    <button
-                      onClick={() =>
-                        order.cancelStatus !== undefined && handleCancelOrder(BigInt(order.orderId), order.cancelStatus)
-                      }
-                      className="w-fit justify-center self-center border mt-2 border-white/70 rounded-xl p-3 bg-red-900 hover:bg-red-900/50"
-                    >
-                      Cancel Order
-                    </button>
+                    {order.storeApproved && !order.courierFound && (
+                      <button
+                        onClick={() =>
+                          order.cancelStatus !== undefined &&
+                          handleCancelOrder(BigInt(order.orderId), order.cancelStatus)
+                        }
+                        className="w-fit justify-center self-center border mt-2 border-white/70 rounded-xl p-3 bg-red-900 hover:bg-red-900/50"
+                      >
+                        Cancel Order
+                      </button>
+                    )}
                   </div>
                 )
             )}
