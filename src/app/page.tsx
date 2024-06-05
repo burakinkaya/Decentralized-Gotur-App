@@ -1,14 +1,16 @@
 "use client";
 import ConnectWalletButton from "@/components/ConnectWalletButton";
-import { Button } from "@/components/ui/button";
+
 import {
   CHAIN_ID,
   COURIER_TOKEN_ADDRESS,
   CUSTOMER_TOKEN_ADDRESS,
+  DEPLOYER_WALLET,
   FOOD_TOKEN_ADDRESS,
   GOTUR_CONTRACT_ADDRESS,
   STORE_TOKEN_ADDRESS,
 } from "@/config";
+import FoodTokenAbi from "@/config/abi/FoodTokenAbi";
 import GoturAbi from "@/config/abi/GoturAbi";
 import erc721Abi from "@/config/abi/erc721Abi";
 
@@ -26,7 +28,21 @@ export default function Home() {
 
   const { address: account } = useAccount();
 
+  const [mintQuantity, setMintQuantity] = useState(0);
+  const [mintAddress, setMintAddress] = useState("0x" as `0x${string}`);
+
   const { writeContractAsync } = useWriteContract();
+
+  const createToastMessage = (explorerUrl: string) => {
+    return (
+      <span>
+        Transaction submitted successfully.{" "}
+        <a href={explorerUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline" }}>
+          Transaction Hash
+        </a>
+      </span>
+    );
+  };
 
   const handleDepositChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -64,8 +80,6 @@ export default function Home() {
     args: [account as `0x${string}`],
   });
 
-  console.log(userBalanceDataCustomer, userBalanceDataCourier, userBalanceDataStore);
-
   const userBalanceCustomer = Number(userBalanceDataCustomer);
   const userBalanceCourier = Number(userBalanceDataCourier);
   const userBalanceStore = Number(userBalanceDataStore);
@@ -86,7 +100,7 @@ export default function Home() {
 
   const handleButtonClick = async (functionName: string, args?: any) => {
     try {
-      const result = writeContractAsync({
+      const result = await writeContractAsync({
         abi: GoturAbi,
         address: GOTUR_CONTRACT_ADDRESS as `0x${string}`,
         //@ts-ignore
@@ -95,9 +109,11 @@ export default function Home() {
         account,
         chainId: CHAIN_ID,
       });
-      console.log(result);
-    } catch (error) {
-      toast.error("Minting failed, try again");
+      const explorerUrl = `https://amoy.polygonscan.com/tx/${result}`;
+
+      toast.success(createToastMessage(explorerUrl));
+    } catch (e: any) {
+      toast.error(e || "An unknown error occurred.");
     }
   };
 
@@ -111,11 +127,10 @@ export default function Home() {
         account,
         chainId: CHAIN_ID,
       });
+      const explorerUrlapprove = `https://amoy.polygonscan.com/tx/${approveResult}`;
 
-      console.log("Approve Result:", approveResult);
-
-      await new Promise((resolve) => setTimeout(resolve, 10000));
-
+      toast.success(createToastMessage(explorerUrlapprove));
+      await new Promise((resolve) => setTimeout(resolve, 5000));
       const depositResult = await writeContractAsync({
         abi: GoturAbi,
         address: GOTUR_CONTRACT_ADDRESS as `0x${string}`,
@@ -124,10 +139,11 @@ export default function Home() {
         account,
         chainId: CHAIN_ID,
       });
+      const explorerUrldeposit = `https://amoy.polygonscan.com/tx/${depositResult}`;
 
-      console.log("Deposit Result:", depositResult);
-    } catch (error) {
-      console.log(error);
+      toast.success(createToastMessage(explorerUrldeposit));
+    } catch (e: any) {
+      toast.error(e || "An unknown error occurred.");
     }
   };
 
@@ -141,10 +157,29 @@ export default function Home() {
         account,
         chainId: CHAIN_ID,
       });
+      const explorerUrl = `https://amoy.polygonscan.com/tx/${withdrawalResult}`;
 
-      console.log("Withdraw Result:", withdrawalResult);
-    } catch (error) {
-      console.log(error);
+      toast.success(createToastMessage(explorerUrl));
+    } catch (e: any) {
+      toast.error(e || "An unknown error occurred.");
+    }
+  };
+
+  const handleMintFoodTokens = async (to: string, amount: number) => {
+    try {
+      const result = await writeContractAsync({
+        abi: FoodTokenAbi,
+        address: FOOD_TOKEN_ADDRESS as `0x${string}`,
+        functionName: "mint",
+        args: [to as `0x${string}`, BigInt(amount)],
+        account,
+        chainId: CHAIN_ID,
+      });
+      const explorerUrl = `https://amoy.polygonscan.com/tx/${result}`;
+
+      toast.success(createToastMessage(explorerUrl));
+    } catch (e: any) {
+      toast.error(e || "An unknown error occurred.");
     }
   };
 
@@ -159,13 +194,9 @@ export default function Home() {
           </div>
         )}
         {account && (
-          <div className="flex flex-col gap-8 w-full items-center justify-center border-b border-white/70 pb-6">
+          <div className="flex flex-col gap-5 w-full items-center justify-center border-b border-white/70 pb-6">
             <div className="flex flex-col gap-2">
-              <p>
-                Remember, you need to deposit at least 1000 Food Tokens (FTK) to be a courier, store or buy products as
-                customer!
-              </p>
-              <p>Ignore this if you already did 🤠</p>
+              <p>Remember, you need to deposit Food Tokens (FTK) to be a courier, store or buy products as customer!</p>
             </div>
             <div className="flex flex-row gap-4">
               <input
@@ -181,7 +212,6 @@ export default function Home() {
                 Deposit Food Tokens
               </button>
             </div>
-
             <div className="flex flex-row gap-4">
               <input
                 type="number"
@@ -196,6 +226,41 @@ export default function Home() {
                 Withdraw Food Tokens
               </button>
             </div>
+            {account === DEPLOYER_WALLET && (
+              <div className="flex flex-row gap-6 w-fit items-center">
+                <div className="flex gap-4 flex-row">
+                  <div className="flex flex-row items-center gap-2">
+                    <p>Quantity:</p>
+                    <input
+                      type="number"
+                      min={1}
+                      value={mintQuantity}
+                      onChange={(e) => setMintQuantity(Number(e.target.value))}
+                      className="text-white rounded-xl p-1 text-center bg-purple-900/50"
+                    ></input>
+                  </div>
+                  <div className="flex flex-row items-center gap-2">
+                    <p>Address:</p>
+                    <input
+                      type="string"
+                      value={mintAddress}
+                      onChange={(e) => setMintAddress(e.target.value as `0x${string}`)}
+                      className="text-white rounded-xl p-1 text-center bg-purple-900/50"
+                    ></input>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    handleMintFoodTokens(mintAddress, mintQuantity);
+                    setMintAddress("0x");
+                    setMintQuantity(0);
+                  }}
+                  className="h-1/2 border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
+                >
+                  Mint Food Tokens
+                </button>
+              </div>
+            )}
           </div>
         )}
 

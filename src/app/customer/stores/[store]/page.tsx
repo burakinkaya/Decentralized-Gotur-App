@@ -5,6 +5,7 @@ import { GOTUR_CONTRACT_ADDRESS, CHAIN_ID } from "@/config";
 import GoturAbi from "@/config/abi/GoturAbi";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 
 type Product = {
@@ -122,6 +123,7 @@ export default function Store() {
         args: [
           storeOwner as `0x${string}`,
           cart.map((item) => BigInt(item.id)),
+          cart.map((item) => item.name),
           cart.map((item) => BigInt(item.quantity)),
           mapAddress,
           courierFee,
@@ -130,9 +132,9 @@ export default function Store() {
         account,
         chainId: CHAIN_ID,
       });
-      console.log(result);
-    } catch (error) {
-      console.log(error);
+      toast.success(`Transaction submitted successfully. Hash: ${result}`);
+    } catch (e: any) {
+      toast.error(e || "An unknown error occurred.");
     }
   };
 
@@ -142,32 +144,32 @@ export default function Store() {
         <h1 className="w-full text-2xl md:text-4xl text-left">Store Products</h1>
         {account && isFetched && (
           <div className="grid grid-cols-4 gap-10 rounded-xl w-full justify-between">
-            {productData.map(
-              (product) =>
-                product.isAvailable && (
-                  <div className="flex flex-col gap-4" key={product.id}>
-                    <div className="flex flex-col border border-white p-10 rounded-xl gap-2 w-full items-start">
-                      <p>Name: {product.name}</p>
-                      <p>Price: {Number(product.price)}</p>
-                      <p>Quantity: {Number(product.quantity)}</p>
-                    </div>
-                    <div className="flex gap-10 w-full  justify-center">
-                      <Button
-                        className="rounded-xl border border-white hover:bg-white/25"
-                        onClick={() => removeFromCart(product)}
-                      >
-                        -
-                      </Button>
-                      <Button
-                        className="rounded-xl border border-white hover:bg-white/25"
-                        onClick={() => addToCart(product)}
-                      >
-                        +
-                      </Button>
-                    </div>
-                  </div>
-                )
-            )}
+            {productData.map((product) => (
+              <div className="flex flex-col gap-4" key={product.id}>
+                <div className="flex flex-col border border-white p-10 rounded-xl gap-2 w-full items-start">
+                  <p>Name: {product.name}</p>
+                  <p>Price: {Number(product.price)}</p>
+                  <p>Quantity: {Number(product.quantity)}</p>
+                  <p>Availability: {product.isAvailable ? "yes" : "no"}</p>
+                </div>
+                <div className="flex gap-10 w-full  justify-center">
+                  <Button
+                    disabled={!product.isAvailable}
+                    className="rounded-xl border border-white hover:bg-white/25"
+                    onClick={() => removeFromCart(product)}
+                  >
+                    -
+                  </Button>
+                  <Button
+                    disabled={!product.isAvailable}
+                    className="rounded-xl border border-white hover:bg-white/25"
+                    onClick={() => addToCart(product)}
+                  >
+                    +
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
         <div className="w-full mt-10">

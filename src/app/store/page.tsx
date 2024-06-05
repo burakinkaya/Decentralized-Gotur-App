@@ -6,6 +6,7 @@ import { GOTUR_CONTRACT_ADDRESS, CHAIN_ID } from "@/config";
 import GoturAbi from "@/config/abi/GoturAbi";
 import { formatAddress } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 
 type Product = {
@@ -14,6 +15,8 @@ type Product = {
   name: string;
   price: bigint;
   quantity: bigint;
+  quantityInput: number;
+  priceInput: number;
 };
 
 type Order = {
@@ -24,6 +27,7 @@ type Order = {
   totalPrice: bigint;
   courierFee: bigint;
   itemIds: number[];
+  itemNames: string[];
   quantities: number[];
   courierFound: boolean;
   storeApproved: boolean;
@@ -48,11 +52,22 @@ export default function Store() {
   const [productQuantity, setProductQuantity] = useState<bigint>(BigInt(0));
 
   const [productData, setProductData] = useState<Product[]>([]);
-
   const [orderData, setOrderData] = useState<Order[]>([]);
+  const [completedOrderData, setCompletedOrderData] = useState<Order[]>([]);
 
   const [toggleAddItemButton, setToggleAddItemButton] = useState<boolean>(false);
   const [toggleButtonText, setToggleButtonText] = useState<string>("Add Item");
+
+  const createToastMessage = (explorerUrl: string) => {
+    return (
+      <span>
+        Transaction submitted successfully.{" "}
+        <a href={explorerUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline" }}>
+          Transaction Hash
+        </a>
+      </span>
+    );
+  };
 
   const { data, isFetched, error } = useReadContract({
     abi: GoturAbi,
@@ -75,10 +90,21 @@ export default function Store() {
     account,
   });
 
+  const {
+    data: completedOrdersData,
+    isFetched: isCompletedOrdersFetched,
+    error: isCompletedOrdersError,
+  } = useReadContract({
+    abi: GoturAbi,
+    address: GOTUR_CONTRACT_ADDRESS,
+    functionName: "getCompletedOrders",
+    chainId: CHAIN_ID,
+    account,
+  });
+
   useEffect(() => {
     if (isFetched) {
       if (data) {
-        console.log("data is", data);
         const productsWithId = (data as Product[]).map((product, index) => ({
           ...product,
           id: index,
@@ -129,6 +155,7 @@ export default function Store() {
             totalPrice: BigInt(order.totalPrice),
             courierFee: BigInt(order.courierFee),
             itemIds: order.itemIds.map((id: any) => Number(id)),
+            itemNames: order.itemNames.map((name: any) => String(name)),
             quantities: order.quantitities.map((quantity: any) => Number(quantity)),
             issuetime: Number(order.issuetime),
             storeApproveTime: Number(order.storeApproveTime),
@@ -148,9 +175,43 @@ export default function Store() {
     }
   }, [isOrdersFetched, ordersData, isOrdersError, account]);
 
+  useEffect(() => {
+    if (isCompletedOrdersFetched) {
+      if (completedOrdersData) {
+        const mutableCompletedOrdersData: Order[] = (completedOrdersData as any).map((completedOrder: any) => {
+          const thirtySecondsInMilliseconds = 30 * 1000;
+          const currentTime = Date.now();
+          const orderIssueTime = Number(completedOrder.issuetime) * 1000;
+
+          const status = "Completed";
+
+          return {
+            ...completedOrder,
+            orderId: Number(completedOrder.orderId),
+            totalPrice: BigInt(completedOrder.totalPrice),
+            courierFee: BigInt(completedOrder.courierFee),
+            itemIds: completedOrder.itemIds.map((id: any) => Number(id)),
+            itemNames: completedOrder.itemNames.map((name: any) => String(name)),
+            quantities: completedOrder.quantitities.map((quantity: any) => Number(quantity)),
+            issuetime: Number(completedOrder.issuetime),
+            storeApproveTime: Number(completedOrder.storeApproveTime),
+            status,
+          };
+        });
+
+        setCompletedOrderData(mutableCompletedOrdersData);
+      } else {
+        console.log("There is no order returned from contract.");
+      }
+    }
+
+    if (isOrdersError) {
+      console.error("Error reading contract:", isOrdersError);
+    }
+  }, [isCompletedOrdersFetched, completedOrdersData, isCompletedOrdersError, account]);
   const handleButtonClick = async () => {
     try {
-      const result = writeContractAsync({
+      const result = await writeContractAsync({
         abi: GoturAbi,
         address: GOTUR_CONTRACT_ADDRESS as `0x${string}`,
         functionName: "addItem",
@@ -158,39 +219,45 @@ export default function Store() {
         account,
         chainId: CHAIN_ID,
       });
-      console.log(result);
-    } catch (error) {
-      console.log(error);
+      const explorerUrl = `https://amoy.polygonscan.com/tx/${result}`;
+
+      toast.success(createToastMessage(explorerUrl));
+    } catch (e: any) {
+      toast.error(e || "An unknown error occurred.");
     }
   };
 
   const handleOpenStore = async () => {
     try {
-      const result = writeContractAsync({
+      const result = await writeContractAsync({
         abi: GoturAbi,
         address: GOTUR_CONTRACT_ADDRESS as `0x${string}`,
         functionName: "openStore",
         account,
         chainId: CHAIN_ID,
       });
-      console.log(result);
-    } catch (error) {
-      console.log(error);
+      const explorerUrl = `https://amoy.polygonscan.com/tx/${result}`;
+
+      toast.success(createToastMessage(explorerUrl));
+    } catch (e: any) {
+      toast.error(e || "An unknown error occurred.");
     }
   };
 
   const handleCloseStore = async () => {
     try {
-      const result = writeContractAsync({
+      const result = await writeContractAsync({
         abi: GoturAbi,
         address: GOTUR_CONTRACT_ADDRESS as `0x${string}`,
         functionName: "closeStore",
         account,
         chainId: CHAIN_ID,
       });
-      console.log(result);
-    } catch (error) {
-      console.log(error);
+      const explorerUrl = `https://amoy.polygonscan.com/tx/${result}`;
+
+      toast.success(createToastMessage(explorerUrl));
+    } catch (e: any) {
+      toast.error(e || "An unknown error occurred.");
     }
   };
 
@@ -201,7 +268,7 @@ export default function Store() {
 
   const handleApproveOrder = async (orderId: bigint) => {
     try {
-      const result = writeContractAsync({
+      const result = await writeContractAsync({
         abi: GoturAbi,
         address: GOTUR_CONTRACT_ADDRESS as `0x${string}`,
         functionName: "approveOrder",
@@ -209,9 +276,78 @@ export default function Store() {
         account,
         chainId: CHAIN_ID,
       });
-      console.log(result);
-    } catch (error) {
-      console.log(error);
+      const explorerUrl = `https://amoy.polygonscan.com/tx/${result}`;
+
+      toast.success(createToastMessage(explorerUrl));
+    } catch (e: any) {
+      toast.error(e || "An unknown error occurred.");
+    }
+  };
+
+  const handleQuantityChange = (id: number, value: string) => {
+    const numericValue = Number(value);
+    setProductData((prev) =>
+      prev.map((product) => (product.id === id ? { ...product, quantityInput: numericValue } : product))
+    );
+  };
+
+  const handlePriceChange = (id: number, value: string) => {
+    const numericValue = Number(value);
+    setProductData((prev) =>
+      prev.map((product) => (product.id === id ? { ...product, priceInput: numericValue } : product))
+    );
+  };
+
+  const handleSetQuantity = async (id: number) => {
+    if (!productData.find((product) => product.id === id)?.quantityInput) return;
+    try {
+      const result = await writeContractAsync({
+        abi: GoturAbi,
+        address: GOTUR_CONTRACT_ADDRESS as `0x${string}`,
+        functionName: "setQuantity",
+        args: [BigInt(id), BigInt(productData.find((product) => product.id === id)?.quantityInput!)],
+        account,
+        chainId: CHAIN_ID,
+      });
+      const explorerUrl = `https://amoy.polygonscan.com/tx/${result}`;
+      toast.success(createToastMessage(explorerUrl));
+    } catch (e: any) {
+      toast.error(e?.message || "An unknown error occurred.");
+    }
+  };
+
+  const handleChangePrice = async (id: number) => {
+    if (!productData.find((product) => product.id === id)?.priceInput) return;
+    try {
+      const result = await writeContractAsync({
+        abi: GoturAbi,
+        address: GOTUR_CONTRACT_ADDRESS as `0x${string}`,
+        functionName: "changePrice",
+        args: [BigInt(id), BigInt(productData.find((product) => product.id === id)?.priceInput!)],
+        account,
+        chainId: CHAIN_ID,
+      });
+      const explorerUrl = `https://amoy.polygonscan.com/tx/${result}`;
+      toast.success(createToastMessage(explorerUrl));
+    } catch (e: any) {
+      toast.error(e?.message || "An unknown error occurred.");
+    }
+  };
+
+  const handleToggleAvailability = async (id: number) => {
+    try {
+      const result = await writeContractAsync({
+        abi: GoturAbi,
+        address: GOTUR_CONTRACT_ADDRESS as `0x${string}`,
+        functionName: "toggleItemAvailability",
+        args: [BigInt(id)],
+        account,
+        chainId: CHAIN_ID,
+      });
+      const explorerUrl = `https://amoy.polygonscan.com/tx/${result}`;
+      toast.success(createToastMessage(explorerUrl));
+    } catch (e: any) {
+      toast.error(e?.message || "An unknown error occurred.");
     }
   };
 
@@ -300,7 +436,7 @@ export default function Store() {
                                   )}
                                   <p>Total Price: {order.totalPrice.toString()}</p>
                                   <p>Courier Fee: {order.courierFee.toString()}</p>
-                                  <p>Items: {order.itemIds.join(", ")}</p>
+                                  <p>Items: {order.itemNames.join(", ")}</p>
                                   <p>Quantities: {order.quantities.join(", ")}</p>
                                   <p>Map Address: {order.mapAddress}</p>
                                   <p>Issue Time: {new Date(order.issuetime * 1000).toLocaleString()}</p>
@@ -331,23 +467,90 @@ export default function Store() {
                   <div className="flex gap-4 items-start flex-col">
                     <p className="text-2xl font-semibold">My Products</p>
                     <div className="grid grid-cols-4 gap-10 rounded-xl w-full justify-between">
-                      {productData.map(
-                        (product) =>
-                          product.isAvailable && (
-                            <div className="flex flex-col gap-4" key={product.id}>
-                              <div className="flex flex-col border border-white p-10 rounded-xl gap-2 w-full items-start">
-                                <p>Name: {product.name}</p>
-                                <p>Price: {Number(product.price)}</p>
-                                <p>Quantity: {Number(product.quantity)}</p>
-                              </div>
-                              <div className="flex gap-10 w-full  justify-center">
-                                <Button className="rounded-xl border border-white hover:bg-white/25">-</Button>
-                                <Button className="rounded-xl border border-white hover:bg-white/25">+</Button>
-                              </div>
+                      {productData.map((product) => (
+                        <div className="flex flex-col gap-4" key={product.id}>
+                          <div className="flex flex-col border border-white p-10 rounded-xl gap-2 w-full items-start">
+                            <p>Name: {product.name}</p>
+                            <p>Price: {Number(product.price)}</p>
+                            <p>Quantity: {Number(product.quantity)}</p>
+                          </div>
+                          <div className="flex flex-col gap-4 w-full justify-center">
+                            <div className="flex gap-2 items-center">
+                              <input
+                                type="number"
+                                value={product.priceInput}
+                                min={0}
+                                onChange={(e) => handlePriceChange(product.id, e.target.value)}
+                                className="border rounded p-2 text-black w-1/2"
+                              />
+                              <Button
+                                onClick={() => handleChangePrice(product.id)}
+                                className="rounded-xl border border-white hover:bg-white/25"
+                              >
+                                Change Price
+                              </Button>
                             </div>
-                          )
-                      )}
+                            <div className="flex gap-2 items-center">
+                              <input
+                                type="number"
+                                value={product.quantityInput}
+                                min={0}
+                                onChange={(e) => handleQuantityChange(product.id, e.target.value)}
+                                className="border rounded p-2 text-black w-1/2"
+                              />
+                              <Button
+                                onClick={() => handleSetQuantity(product.id)}
+                                className="rounded-xl border border-white hover:bg-white/25"
+                              >
+                                Set Quantity
+                              </Button>
+                            </div>
+                            <Button
+                              onClick={() => handleToggleAvailability(product.id)}
+                              className="rounded-xl border border-white hover:bg-white/25"
+                            >
+                              {product.isAvailable ? "Disable" : "Enable"}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
+                  </div>
+                  <div className="flex gap-4 items-start flex-col">
+                    <p className="text-2xl font-semibold ">Completed Orders</p>
+                    {account && isCompletedOrdersFetched && (
+                      <div className="grid grid-cols-1 gap-4 rounded-xl w-full justify-between">
+                        {completedOrderData.map(
+                          (order) =>
+                            order.store === account && (
+                              <div
+                                key={order.orderId}
+                                className="flex flex-col border border-white p-4 rounded-xl gap-4 w-full mb-4"
+                              >
+                                <div className="flex flex-col gap-2">
+                                  <p>Order ID: {order.orderId}</p>
+                                  <p>Customer Name: {formatAddress(order.customer)}</p>
+                                  {order.courier !== "0x0000000000000000000000000000000000000000" && order.courier && (
+                                    <p>Courier: {formatAddress(order.courier)}</p>
+                                  )}
+                                  <p>Total Price: {order.totalPrice.toString()}</p>
+                                  <p>Courier Fee: {order.courierFee.toString()}</p>
+                                  <p>Items: {order.itemNames.join(", ")}</p>
+                                  <p>Quantities: {order.quantities.join(", ")}</p>
+                                  <p>Map Address: {order.mapAddress}</p>
+                                  <p>Issue Time: {new Date(order.issuetime * 1000).toLocaleString()}</p>
+                                  {order.storeApproveTime !== 0 && (
+                                    <p>
+                                      Store Approve Time: {new Date(order.storeApproveTime * 1000).toLocaleString()}
+                                    </p>
+                                  )}
+                                  <p className="text-green-400">Order Status: {order.status}</p>
+                                </div>
+                              </div>
+                            )
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

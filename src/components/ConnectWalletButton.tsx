@@ -23,8 +23,8 @@ export default function ConnectWalletButton({ className, showIcon }: Props) {
     onConnect: async (data) => {
       if (chainId !== CHAIN_ID) {
         await switchChainAsync({ chainId: CHAIN_ID });
+        toast.success(`Successfully changed the network`);
       }
-      console.log("Connected:", data);
     },
   });
 

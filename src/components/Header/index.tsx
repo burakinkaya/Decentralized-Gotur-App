@@ -18,11 +18,7 @@ const Header = () => {
     args: [account as `0x${string}`],
   });
 
-  const {
-    data: userBalanceDataFoodToken,
-    isFetched: isFetchedFoodToken,
-    error: error1,
-  } = useReadContract({
+  const { data: userBalanceDataFoodToken, isFetched: isFetchedFoodToken } = useReadContract({
     abi: GoturAbi,
     address: GOTUR_CONTRACT_ADDRESS,
     functionName: "balanceOf",
@@ -30,11 +26,7 @@ const Header = () => {
     args: [account as `0x${string}`],
   });
 
-  const {
-    data: userStakeBalance,
-    isFetched: isFetchedStakeBalance,
-    error: error2,
-  } = useReadContract({
+  const { data: userStakeBalance, isFetched: isFetchedStakeBalance } = useReadContract({
     abi: GoturAbi,
     address: GOTUR_CONTRACT_ADDRESS as `0x${string}`,
     functionName: "stakeOf",

@@ -196,6 +196,24 @@ const GoturAbi = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "itemId",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_price",
+        type: "uint256",
+      },
+    ],
+    name: "changePrice",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "closeStore",
     outputs: [],
@@ -242,124 +260,6 @@ const GoturAbi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "itemId",
-        type: "uint256",
-      },
-    ],
-    name: "disableItem",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "getActiveOrderAsCourier",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "uint256",
-            name: "orderId",
-            type: "uint256",
-          },
-          {
-            internalType: "address",
-            name: "customer",
-            type: "address",
-          },
-          {
-            internalType: "address",
-            name: "store",
-            type: "address",
-          },
-          {
-            internalType: "address",
-            name: "courier",
-            type: "address",
-          },
-          {
-            internalType: "uint256",
-            name: "totalPrice",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "courierFee",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256[]",
-            name: "itemIds",
-            type: "uint256[]",
-          },
-          {
-            internalType: "uint256[]",
-            name: "quantitities",
-            type: "uint256[]",
-          },
-          {
-            internalType: "bool",
-            name: "courierFound",
-            type: "bool",
-          },
-          {
-            internalType: "bool",
-            name: "storeApproved",
-            type: "bool",
-          },
-          {
-            internalType: "bool",
-            name: "courierPickedUp",
-            type: "bool",
-          },
-          {
-            internalType: "bool",
-            name: "isDeliveredByCourier",
-            type: "bool",
-          },
-          {
-            internalType: "bool",
-            name: "isReceivedByCustomer",
-            type: "bool",
-          },
-          {
-            internalType: "bool",
-            name: "isCanceled",
-            type: "bool",
-          },
-          {
-            internalType: "bool",
-            name: "isComplete",
-            type: "bool",
-          },
-          {
-            internalType: "string",
-            name: "mapAddress",
-            type: "string",
-          },
-          {
-            internalType: "uint256",
-            name: "issuetime",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "storeApproveTime",
-            type: "uint256",
-          },
-        ],
-        internalType: "struct Gotur.Order",
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [],
     name: "getActiveOrders",
     outputs: [
@@ -399,6 +299,11 @@ const GoturAbi = [
             internalType: "uint256[]",
             name: "itemIds",
             type: "uint256[]",
+          },
+          {
+            internalType: "string[]",
+            name: "itemNames",
+            type: "string[]",
           },
           {
             internalType: "uint256[]",
@@ -465,46 +370,110 @@ const GoturAbi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "itemId",
-        type: "uint256",
-      },
-      {
-        internalType: "address",
-        name: "storeAddress",
-        type: "address",
-      },
-    ],
-    name: "getItemFromStore",
+    inputs: [],
+    name: "getCompletedOrders",
     outputs: [
       {
         components: [
           {
+            internalType: "uint256",
+            name: "orderId",
+            type: "uint256",
+          },
+          {
+            internalType: "address",
+            name: "customer",
+            type: "address",
+          },
+          {
+            internalType: "address",
+            name: "store",
+            type: "address",
+          },
+          {
+            internalType: "address",
+            name: "courier",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "totalPrice",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "courierFee",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256[]",
+            name: "itemIds",
+            type: "uint256[]",
+          },
+          {
+            internalType: "string[]",
+            name: "itemNames",
+            type: "string[]",
+          },
+          {
+            internalType: "uint256[]",
+            name: "quantitities",
+            type: "uint256[]",
+          },
+          {
+            internalType: "bool",
+            name: "courierFound",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "storeApproved",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "courierPickedUp",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "isDeliveredByCourier",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "isReceivedByCustomer",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "isCanceled",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "isComplete",
+            type: "bool",
+          },
+          {
             internalType: "string",
-            name: "name",
+            name: "mapAddress",
             type: "string",
           },
           {
             internalType: "uint256",
-            name: "price",
+            name: "issuetime",
             type: "uint256",
-          },
-          {
-            internalType: "bool",
-            name: "isAvailable",
-            type: "bool",
           },
           {
             internalType: "uint256",
-            name: "quantity",
+            name: "storeApproveTime",
             type: "uint256",
           },
         ],
-        internalType: "struct Gotur.Item",
+        internalType: "struct Gotur.Order[]",
         name: "",
-        type: "tuple",
+        type: "tuple[]",
       },
     ],
     stateMutability: "view",
@@ -591,6 +560,11 @@ const GoturAbi = [
             internalType: "uint256[]",
             name: "itemIds",
             type: "uint256[]",
+          },
+          {
+            internalType: "string[]",
+            name: "itemNames",
+            type: "string[]",
           },
           {
             internalType: "uint256[]",
@@ -767,6 +741,11 @@ const GoturAbi = [
         type: "uint256[]",
       },
       {
+        internalType: "string[]",
+        name: "_itemNames",
+        type: "string[]",
+      },
+      {
         internalType: "uint256[]",
         name: "_quantities",
         type: "uint256[]",
@@ -864,6 +843,19 @@ const GoturAbi = [
       },
     ],
     name: "takeOrderAsCourier",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "itemId",
+        type: "uint256",
+      },
+    ],
+    name: "toggleItemAvailability",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",

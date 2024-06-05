@@ -1,4 +1,7 @@
 "use client";
+import "react-toastify/dist/ReactToastify.css";
+
+// ToastProvider Component
 
 import { ToastContainer } from "react-toastify";
 

@@ -6,6 +6,7 @@ import { formatAddress } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import Link from "next/link";
+import { toast } from "react-toastify";
 
 type Store = {
   name: string;
@@ -20,6 +21,7 @@ type Order = {
   totalPrice: bigint;
   courierFee: bigint;
   itemIds: number[];
+  itemNames: string[];
   quantities: number[];
   courierFound: boolean;
   storeApproved: boolean;
@@ -32,8 +34,8 @@ type Order = {
   issuetime: number;
   storeApproveTime: number;
   status?: string;
-  cancelStatus: number;
-  receiveButton: boolean;
+  cancelStatus?: number;
+  receiveButton?: boolean;
 };
 
 export default function Customer() {
@@ -44,6 +46,8 @@ export default function Customer() {
   const [storeData, setStoreData] = useState<Store[]>([]);
 
   const [orderData, setOrderData] = useState<Order[]>([]);
+
+  const [completedOrderData, setCompletedOrderData] = useState<Order[]>([]);
 
   const {
     data: storesData,
@@ -69,6 +73,27 @@ export default function Customer() {
     account,
   });
 
+  const {
+    data: completedOrdersData,
+    isFetched: isCompletedOrdersFetched,
+    error: isCompletedOrdersError,
+  } = useReadContract({
+    abi: GoturAbi,
+    address: GOTUR_CONTRACT_ADDRESS,
+    functionName: "getCompletedOrders",
+    chainId: CHAIN_ID,
+    account,
+  });
+  const createToastMessage = (explorerUrl: string) => {
+    return (
+      <span>
+        Transaction submitted successfully.{" "}
+        <a href={explorerUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline" }}>
+          Transaction Hash
+        </a>
+      </span>
+    );
+  };
   useEffect(() => {
     if (isStoresFetched) {
       if (storesData) {
@@ -96,9 +121,11 @@ export default function Customer() {
         chainId: CHAIN_ID,
       });
 
-      console.log(result);
-    } catch (error) {
-      console.log(error);
+      const explorerUrl = `https://amoy.polygonscan.com/tx/${result}`;
+
+      toast.success(createToastMessage(explorerUrl));
+    } catch (e: any) {
+      toast.error(e || "An unknown error occurred.");
     }
   };
 
@@ -113,9 +140,11 @@ export default function Customer() {
         chainId: CHAIN_ID,
       });
 
-      console.log(result);
-    } catch (error) {
-      console.log(error);
+      const explorerUrl = `https://amoy.polygonscan.com/tx/${result}`;
+
+      toast.success(createToastMessage(explorerUrl));
+    } catch (e: any) {
+      toast.error(e || "An unknown error occurred.");
     }
   };
 
@@ -157,6 +186,7 @@ export default function Customer() {
             totalPrice: BigInt(order.totalPrice),
             courierFee: BigInt(order.courierFee),
             itemIds: order.itemIds.map((id: any) => Number(id)),
+            itemNames: order.itemNames.map((name: any) => String(name)),
             quantities: order.quantitities.map((quantity: any) => Number(quantity)),
             issuetime: Number(order.issuetime),
             storeApproveTime: Number(order.storeApproveTime),
@@ -177,6 +207,41 @@ export default function Customer() {
       console.error("Error reading contract:", isOrdersError);
     }
   }, [isOrdersFetched, ordersData, isOrdersError, account]);
+
+  useEffect(() => {
+    if (isCompletedOrdersFetched) {
+      if (completedOrdersData) {
+        const mutableCompletedOrdersData: Order[] = (completedOrdersData as any).map((completedOrder: any) => {
+          const thirtySecondsInMilliseconds = 30 * 1000;
+          const currentTime = Date.now();
+          const orderIssueTime = Number(completedOrder.issuetime) * 1000;
+
+          const status = "Completed";
+
+          return {
+            ...completedOrder,
+            orderId: Number(completedOrder.orderId),
+            totalPrice: BigInt(completedOrder.totalPrice),
+            courierFee: BigInt(completedOrder.courierFee),
+            itemIds: completedOrder.itemIds.map((id: any) => Number(id)),
+            itemNames: completedOrder.itemNames.map((name: any) => String(name)),
+            quantities: completedOrder.quantitities.map((quantity: any) => Number(quantity)),
+            issuetime: Number(completedOrder.issuetime),
+            storeApproveTime: Number(completedOrder.storeApproveTime),
+            status,
+          };
+        });
+
+        setCompletedOrderData(mutableCompletedOrdersData);
+      } else {
+        console.log("There is no order returned from contract.");
+      }
+    }
+
+    if (isOrdersError) {
+      console.error("Error reading contract:", isOrdersError);
+    }
+  }, [isCompletedOrdersFetched, completedOrdersData, isCompletedOrdersError, account]);
 
   return (
     <main className="bg-[#8f7efc] flex min-h-screen flex-col items-center justify-between p-12">
@@ -219,7 +284,7 @@ export default function Customer() {
                     )}
                     <p>Total Price: {order.totalPrice.toString()}</p>
                     <p>Courier Fee: {order.courierFee.toString()}</p>
-                    <p>Items: {order.itemIds.join(", ")}</p>
+                    <p>Items: {order.itemNames.join(", ")}</p>
                     <p>Quantities: {order.quantities.join(", ")}</p>
                     <p>Map Address: {order.mapAddress}</p>
                     <p>Issue Time: {new Date(order.issuetime * 1000).toLocaleString()}</p>
@@ -246,6 +311,36 @@ export default function Customer() {
                         Confirm Delivery
                       </button>
                     )}
+                  </div>
+                )
+            )}
+          </div>
+        )}
+        {account && isCompletedOrdersFetched && (
+          <div className="w-full">
+            <p className="w-full text-2xl text-left mb-4 text-white font-semibold">Completed Orders</p>
+            {completedOrderData.map(
+              (order) =>
+                order.customer === account && (
+                  <div
+                    key={order.orderId}
+                    className="flex flex-col border border-white p-4 rounded-xl gap-2 w-full mb-4"
+                  >
+                    <p>Order ID: {order.orderId}</p>
+                    <p>Store Name: {formatAddress(order.store)}</p>
+                    {order.courier !== "0x0000000000000000000000000000000000000000" && order.courier && (
+                      <p>Courier: {formatAddress(order.courier)}</p>
+                    )}
+                    <p>Total Price: {order.totalPrice.toString()}</p>
+                    <p>Courier Fee: {order.courierFee.toString()}</p>
+                    <p>Items: {order.itemNames.join(", ")}</p>
+                    <p>Quantities: {order.quantities.join(", ")}</p>
+                    <p>Map Address: {order.mapAddress}</p>
+                    <p>Issue Time: {new Date(order.issuetime * 1000).toLocaleString()}</p>
+                    {order.storeApproveTime !== 0 && (
+                      <p>Store Approve Time: {new Date(order.storeApproveTime * 1000).toLocaleString()}</p>
+                    )}
+                    <p className="text-green-400">Order Status: {order.status}</p>
                   </div>
                 )
             )}
