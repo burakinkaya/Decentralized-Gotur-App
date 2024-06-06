@@ -406,13 +406,18 @@ export default function Store() {
                   </div>
                   <button
                     className="w-fit border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
-                    onClick={handleButtonClick}
+                    onClick={() => {
+                      handleButtonClick();
+                      setTimeout(() => {
+                        handleAddItem();
+                      }, 5000);
+                    }}
                   >
                     Add Product
                   </button>
                 </div>
               ) : (
-                <div className="w-[344.5px] pr-4"></div>
+                <div className="w-[389.5px] pr-4"></div>
               )}
 
               <div className="flex flex-col gap-8 border-l pl-4 border-white/70">

@@ -84,6 +84,27 @@ export default function Home() {
   const userBalanceCourier = Number(userBalanceDataCourier);
   const userBalanceStore = Number(userBalanceDataStore);
 
+  const { data: customerOwner, isFetched: isCustomerOwnerFetched } = useReadContract({
+    abi: erc721Abi,
+    address: CUSTOMER_TOKEN_ADDRESS,
+    functionName: "owner",
+    chainId: CHAIN_ID,
+  });
+
+  const { data: courierOwner, isFetched: isCourierOwnerFetched } = useReadContract({
+    abi: erc721Abi,
+    address: COURIER_TOKEN_ADDRESS,
+    functionName: "owner",
+    chainId: CHAIN_ID,
+  });
+
+  const { data: storeOwner, isFetched: isStoreOwnerFetched } = useReadContract({
+    abi: erc721Abi,
+    address: STORE_TOKEN_ADDRESS,
+    functionName: "owner",
+    chainId: CHAIN_ID,
+  });
+
   useEffect(() => {
     if (isFetchedCustomer && isFetchedCourier && isFetchedStore) {
       if (userBalanceCustomer > 0) {
@@ -183,6 +204,25 @@ export default function Home() {
     }
   };
 
+  const handleTransferOwnership = async (contractAddress: string) => {
+    try {
+      const result = await writeContractAsync({
+        abi: erc721Abi,
+        address: contractAddress as `0x${string}`,
+        //@ts-ignore
+        functionName: "transferOwnership",
+        args: [GOTUR_CONTRACT_ADDRESS],
+        account,
+        chainId: CHAIN_ID,
+      });
+      const explorerUrl = `https://amoy.polygonscan.com/tx/${result}`;
+
+      toast.success(createToastMessage(explorerUrl));
+    } catch (e: any) {
+      toast.error(e || "An unknown error occurred.");
+    }
+  };
+
   return (
     <main className="bg-[#8f7efc] flex min-h-screen flex-col items-center justify-between p-12">
       <div className="mb-16 text-center lg:mb-0 lg:w-full items-center lg:max-w-5xl flex flex-col gap-6">
@@ -227,7 +267,39 @@ export default function Home() {
               </button>
             </div>
             {account === DEPLOYER_WALLET && (
-              <div className="flex flex-row gap-6 w-fit items-center">
+              <div className="flex flex-col gap-6 w-fit items-center">
+                <div className="flex gap-2 w-full">
+                  {customerOwner === account && (
+                    <button
+                      onClick={() => {
+                        handleTransferOwnership(CUSTOMER_TOKEN_ADDRESS);
+                      }}
+                      className="h-1/2 border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
+                    >
+                      Transfer Ownership Customer
+                    </button>
+                  )}
+                  {courierOwner === account && (
+                    <button
+                      onClick={() => {
+                        handleTransferOwnership(COURIER_TOKEN_ADDRESS);
+                      }}
+                      className="h-1/2 border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
+                    >
+                      Transfer Ownership Courier
+                    </button>
+                  )}
+                  {storeOwner === account && (
+                    <button
+                      onClick={() => {
+                        handleTransferOwnership(STORE_TOKEN_ADDRESS);
+                      }}
+                      className="h-1/2 border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
+                    >
+                      Transfer Ownership Store
+                    </button>
+                  )}
+                </div>
                 <div className="flex gap-4 flex-row">
                   <div className="flex flex-row items-center gap-2">
                     <p>Quantity:</p>
@@ -248,17 +320,17 @@ export default function Home() {
                       className="text-white rounded-xl p-1 text-center bg-purple-900/50"
                     ></input>
                   </div>
+                  <button
+                    onClick={() => {
+                      handleMintFoodTokens(mintAddress, mintQuantity);
+                      setMintAddress("0x");
+                      setMintQuantity(0);
+                    }}
+                    className="h-1/2 border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
+                  >
+                    Mint Food Tokens
+                  </button>
                 </div>
-                <button
-                  onClick={() => {
-                    handleMintFoodTokens(mintAddress, mintQuantity);
-                    setMintAddress("0x");
-                    setMintQuantity(0);
-                  }}
-                  className="h-1/2 border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
-                >
-                  Mint Food Tokens
-                </button>
               </div>
             )}
           </div>
@@ -267,6 +339,7 @@ export default function Home() {
         {account && userType === "none" && (
           <div className="flex flex-col gap-4">
             <p className="text-xl md:text-2xl text-left">I'm a:</p>
+
             <div className="flex gap-4 w-full">
               <button
                 className="w-1/3 border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
@@ -297,12 +370,15 @@ export default function Home() {
         )}
 
         {account && userType !== "none" && (
-          <button
-            className="w-1/3 border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
-            onClick={() => (window.location.href = `/${userType}`)}
-          >
-            Go to Dashboard
-          </button>
+          <div className="flex flex-col gap-4 items-center">
+            <p>Welcome, {userType.toString().toLocaleUpperCase()} user</p>
+            <button
+              className="w-fit border border-white/70 rounded-xl p-3 bg-purple-900 hover:bg-purple-900/50"
+              onClick={() => (window.location.href = `/${userType}`)}
+            >
+              Go to Dashboard
+            </button>
+          </div>
         )}
       </div>
     </main>
